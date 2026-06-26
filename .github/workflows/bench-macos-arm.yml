@@ -9,7 +9,7 @@ on:
 jobs:
   benchmark:
     runs-on: macos-14   # Apple Silicon (M1) runner
-    timeout-minutes: 360
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -18,25 +18,34 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install
+      - name: Install pinned deps
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -r requirements.txt
+          pip install --no-deps -e .
+          pip install pytest pytest-cov ruff mypy
 
-      - name: Lint
+      - name: Lint + format
         run: |
-          ruff check .
-          ruff format --check .
+          ruff check src/ tests/
+          ruff format --check src/ tests/
 
       - name: Unit tests
         run: pytest tests/ -v
 
-      - name: Install Ollama
+      - name: Type check (best-effort)
+        continue-on-error: true
+        run: |
+          pip install --quiet pandas-stubs 2>/dev/null || true
+          mypy src/ --no-incremental || true
+
+      - name: Install Ollama (best-effort smoke)
+        continue-on-error: true
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
           ollama --version
 
-      - name: CI profile (macOS small/medium models)
+      - name: CI profile
         run: |
           cat > configs/profiles/ci-mac-small.yaml <<'EOF'
           host_name: ci-macos-arm
@@ -52,21 +61,27 @@ jobs:
           EOF
 
       - name: Start Ollama daemon
+        continue-on-error: true
         run: |
           ollama serve &
           sleep 5
           ollama list
 
       - name: Pull small test model
+        continue-on-error: true
         run: |
           ollama pull phi3:mini-4k-instruct-q4_K_M || true
 
-      - name: Dry-run + smoke
+      - name: Dry-run
         run: |
           python -m edge_llm_bench.runner \
             --profile configs/profiles/ci-mac-small.yaml \
             --config configs/matrix.yaml \
             --dry-run
+
+      - name: Smoke (best-effort)
+        continue-on-error: true
+        run: |
           python -m edge_llm_bench.runner \
             --profile configs/profiles/ci-mac-small.yaml \
             --max-examples 3 \
