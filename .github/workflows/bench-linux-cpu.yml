@@ -32,7 +32,12 @@ jobs:
 
       - name: Lint + format check
         run: |
+          set -e
+          echo "--- ruff version ---"
+          ruff --version || which ruff || echo "ruff NOT FOUND"
+          echo "--- ruff check ---"
           ruff check src/ tests/
+          echo "--- ruff format --check ---"
           ruff format --check src/ tests/
 
       - name: Unit tests
