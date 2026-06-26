@@ -145,13 +145,19 @@ def recommend(
 
     selected = _STRATEGIES[strategy](runnable)
     recs: list[Recommendation] = []
-    pareto = _pareto_mask(
-        runnable.dropna(subset=["mmlu_acc", "tokens_per_s_p50"]),
-        x="tokens_per_s_p50",
-        y="mmlu_acc",
-        higher_better_x=True,
-    )
-    runnable = runnable.assign(_pareto=pareto)
+
+    # Compute Pareto mask only over rows that have BOTH quality and speed data.
+    # Pad to the full runnable index so .assign() matches lengths.
+    with_data = runnable.dropna(subset=["mmlu_acc", "tokens_per_s_p50"])
+    if not with_data.empty:
+        pareto_short = _pareto_mask(
+            with_data, x="tokens_per_s_p50", y="mmlu_acc", higher_better_x=True
+        )
+        full_pareto = pd.Series(False, index=runnable.index)
+        full_pareto.loc[with_data.index] = pareto_short
+        runnable = runnable.assign(_pareto=full_pareto)
+    else:
+        runnable = runnable.assign(_pareto=False)
 
     for rank, (_, row) in enumerate(selected.iterrows(), start=1):
         is_pareto = bool(row.get("_pareto", False))

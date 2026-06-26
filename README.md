@@ -16,6 +16,38 @@ self-contained HTML report you can open offline.
 
 ---
 
+## Latest results — Windows laptop (CPU-only, 16 GB RAM)
+
+Measured with `python -m edge_llm_bench.runner --max-examples 2` on a 12-core
+AMD64 laptop, Ollama 0.30.10. **6 small open-weight models, q4_K_M
+quantization, ctx_size=2048.** Lower TTFT and higher tokens/s are better.
+
+| Model | Size | TTFT (ms) | Tokens/s | MMLU | HumanEval | Notes |
+|---|---|---:|---:|---:|---:|---|
+| **qwen2.5:1.5b** | 0.9 GB | 809 | **9.98** | 1.00 | **1.00** | Best tok/s + HumanEval |
+| **phi3:mini** (3.8B) | 2.2 GB | **259** | 8.19 | 1.00 | 0.50 | Best TTFT (3× faster) |
+| **llama3.2:1b** | 1.3 GB | 979 | 9.20 | 1.00 | — | Best size/speed |
+| **qwen2.5:3b** | 1.9 GB | 873 | 7.60 | 0.50 | 0.50 | Lowest MMLU |
+| **gemma2:2b** | 1.6 GB | 1 154 | 7.78 | 1.00 | 1.00 | Tied best HumanEval |
+| **llama3.2:3b** | 2.0 GB | 1 028 | 7.06 | 1.00 | 0.50 | Largest |
+
+> **Insight 1 — size ≠ quality:** `qwen2.5:1.5b` (0.9 GB) and `gemma2:2b`
+> (1.6 GB) tie for the best HumanEval score (1.00), beating `llama3.2:3b` (2.0
+> GB). Smaller ≠ worse when training quality is high.
+>
+> **Insight 2 — TTFT gap is enormous:** `phi3:mini` has 3× lower TTFT than
+> the next-best model. For interactive chat, that's the difference between
+> "feels alive" and "feels laggy".
+>
+> **Insight 3 — Pareto front exists:** `qwen2.5:1.5b` and `phi3:mini` are
+> both Pareto-optimal (you can't improve one without sacrificing the other).
+> Pick `qwen2.5:1.5b` for batch throughput, `phi3:mini` for chat latency.
+
+Full Pareto-frontier analysis and 5 interactive charts:
+[`docs/report-smoke.html`](docs/report-smoke.html) (open offline in any browser).
+
+---
+
 ## Why this exists
 
 The local-LLM ecosystem has a measurement crisis:
