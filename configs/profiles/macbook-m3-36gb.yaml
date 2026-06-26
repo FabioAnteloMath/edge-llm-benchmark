@@ -1,0 +1,11 @@
+# MacBook M3 Pro with 36 GB unified memory.
+host_name: macbook-m3-pro-36gb
+os: darwin
+arch: arm64
+cpu_cores: 12
+ram_total_gb: 36
+ram_available_gb: 24       # ~12 GB reserved for OS + apps
+gpu_type: apple
+vram_gb: null             # unified memory — see ram_total_gb
+disk_free_gb: 500
+notes: "Apple M3 Pro, 36 GB unified memory. Run with backend=ollama."

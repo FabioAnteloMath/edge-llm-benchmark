@@ -1,0 +1,42 @@
+# Canonical model/format matrix.
+# Each entry expands into one (model × format) benchmark row.
+# Format values:
+#   Q4_K_M, Q5_K_M, Q8_0, ...   — GGUF quants (run via llama.cpp / Ollama)
+#   AWQ, GPTQ                   — CUDA-only (require [cuda] extras)
+#   MLX-4bit, MLX-8bit          — Apple Silicon only (require [apple] extras)
+#
+# requires_ram_gb: conservative estimate of *available* RAM needed at load.
+# The runner drops any config that exceeds the profile's available RAM.
+
+version: 1
+
+defaults:
+  ctx_size: 4096
+  backend: ollama
+  skip_quality: false
+
+models:
+  - id: microsoft/Phi-4-14B-Instruct
+    family: phi
+    formats: [Q8_0, Q4_K_M]
+    requires_ram_gb: 16
+
+  - id: Qwen/Qwen3-32B-Instruct
+    family: qwen
+    formats: [Q5_K_M, Q4_K_M]
+    requires_ram_gb: 24
+
+  - id: mistralai/Mistral-Small-24B-Instruct-2501
+    family: mistral
+    formats: [Q5_K_M, Q4_K_M]
+    requires_ram_gb: 18
+
+  - id: meta-llama/Llama-3.3-70B-Instruct
+    family: llama
+    formats: [Q4_K_M, Q3_K_M]
+    requires_ram_gb: 40
+
+  - id: deepseek-ai/DeepSeek-V3-0324
+    family: deepseek
+    formats: [Q4_K_M]
+    requires_ram_gb: 48

@@ -1,0 +1,82 @@
+name: bench-macos-arm
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly on Sunday at 06:00 UTC (offset from linux to avoid collisions)
+    - cron: "0 6 * * 0"
+
+jobs:
+  benchmark:
+    runs-on: macos-14   # Apple Silicon (M1) runner
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Unit tests
+        run: pytest tests/ -v
+
+      - name: Install Ollama
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama --version
+
+      - name: CI profile (macOS small/medium models)
+        run: |
+          cat > configs/profiles/ci-mac-small.yaml <<'EOF'
+          host_name: ci-macos-arm
+          os: darwin
+          arch: arm64
+          cpu_cores: 4
+          ram_total_gb: 14
+          ram_available_gb: 10
+          gpu_type: apple
+          vram_gb: null
+          disk_free_gb: 30
+          notes: "GitHub Actions macOS M1 runner profile."
+          EOF
+
+      - name: Start Ollama daemon
+        run: |
+          ollama serve &
+          sleep 5
+          ollama list
+
+      - name: Pull small test model
+        run: |
+          ollama pull phi3:mini-4k-instruct-q4_K_M || true
+
+      - name: Dry-run + smoke
+        run: |
+          python -m edge_llm_bench.runner \
+            --profile configs/profiles/ci-mac-small.yaml \
+            --config configs/matrix.yaml \
+            --dry-run
+          python -m edge_llm_bench.runner \
+            --profile configs/profiles/ci-mac-small.yaml \
+            --max-examples 3 \
+            --skip-quality \
+            --output-dir results/ci-mac-smoke || true
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results-macos-arm
+          path: results/
+          if-no-files-found: ignore

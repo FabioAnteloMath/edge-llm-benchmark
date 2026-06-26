@@ -1,0 +1,11 @@
+# Linux box with RTX 4090 24 GB.
+host_name: rtx-4090-24gb
+os: linux
+arch: x86_64
+cpu_cores: 16
+ram_total_gb: 64
+ram_available_gb: 56
+gpu_type: nvidia
+vram_gb: 24
+disk_free_gb: 1000
+notes: "Threadripper-class CPU + RTX 4090. CUDA backend preferred for AWQ/GPTQ."

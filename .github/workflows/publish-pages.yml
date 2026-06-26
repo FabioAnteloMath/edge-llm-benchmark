@@ -1,0 +1,61 @@
+name: publish-pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "results/**"
+      - ".github/workflows/publish-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Find latest results.csv
+        id: find
+        run: |
+          mkdir -p docs
+          latest=$(ls -1dt results/*/results.csv 2>/dev/null | head -1 || echo "")
+          if [ -n "$latest" ]; then
+            python -m edge_llm_bench.report --csv "$latest" --out docs/report.html
+          else
+            echo "<h1>No benchmark results yet</h1>" > docs/report.html
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

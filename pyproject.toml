@@ -1,0 +1,102 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edge-llm-bench"
+version = "0.1.0"
+description = "Reproducible benchmark for open-weight LLMs: quality × speed × memory across quantization formats."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Matheus", email = "matheus@example.com" }]
+keywords = ["llm", "benchmark", "quantization", "ollama", "edge"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+  "huggingface-hub>=0.24",
+  "ollama>=0.4",
+  "pandas>=2.2",
+  "plotly>=5.22",
+  "psutil>=6.0",
+  "pyyaml>=6.0",
+  "structlog>=24.1",
+  "tqdm>=4.66",
+  "lm-eval>=0.4",
+  "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2",
+  "pytest-cov>=5.0",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "types-psutil",
+  "types-PyYAML",
+]
+llamacpp = ["llama-cpp-python>=0.3"]
+cuda = ["pynvml>=11.5", "auto-gptq>=0.7", "autoawq>=0.2"]
+apple = ["mlx-lm>=0.18"]
+
+[project.urls]
+Homepage = "https://github.com/matheus/edge-llm-benchmark"
+Issues = "https://github.com/matheus/edge-llm-benchmark/issues"
+
+[project.scripts]
+edge-llm-bench = "edge_llm_bench.runner:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"edge_llm_bench" = ["templates/*.html"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["results", "datasets", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N"]
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011", "N802"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "integration: marks tests requiring live ollama/HF",
+]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+mypy_path = "mypy_stubs"
+# Skip type-checking third-party libraries whose stubs assume Python 3.12+
+exclude = [
+  "src/.*\\.egg-info",
+  "results/",
+  "datasets/",
+  "tests/",
+  "\\.venv/",
+  "venv/",
+  "build/",
+]
+# Don't follow imports into numpy/pandas/plotly etc — they pull in stubs
+# that use PEP 695 syntax only available in Python 3.12+. We just check our code.
+follow_imports = "silent"

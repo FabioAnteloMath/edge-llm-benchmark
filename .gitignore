@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Benchmark outputs (huge; never commit)
+results/
+!results/.gitkeep
+docs/runs/*
+!docs/runs/.gitkeep
+
+# Model artifacts (huge; never commit)
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.onnx
+*.h5
+huggingface/
+
+# Logs
+*.log
+logs/
+
+# Env files (never commit secrets)
+.env
+.env.local

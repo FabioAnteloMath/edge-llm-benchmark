@@ -1,0 +1,47 @@
+# Smoke matrix — small models that fit on a 10-16 GB laptop and benchmark in
+# 10-15 minutes total. Use with --max-examples 3 for fast smoke tests.
+#
+# To pull any of these:
+#   ollama pull llama3.2:1b
+#   ollama pull qwen2.5:3b
+#   ollama pull gemma2:2b
+#
+# The canonical full matrix (Phi-4 14B, Qwen 32B, Mistral 24B, Llama 70B,
+# DeepSeek V3) is at configs/matrix.yaml.
+version: 1
+
+defaults:
+  ctx_size: 2048
+  backend: ollama
+  skip_quality: false
+
+models:
+  - id: llama3.2:1b
+    family: llama
+    formats: [q4_K_M]
+    requires_ram_gb: 3
+
+  - id: qwen2.5:1.5b
+    family: qwen
+    formats: [q4_K_M]
+    requires_ram_gb: 3
+
+  - id: gemma2:2b
+    family: gemma
+    formats: [q4_K_M]
+    requires_ram_gb: 5
+
+  - id: llama3.2:3b
+    family: llama
+    formats: [q4_K_M]
+    requires_ram_gb: 5
+
+  - id: phi3:mini
+    family: phi
+    formats: [q4_K_M]
+    requires_ram_gb: 4
+
+  - id: qwen2.5:3b
+    family: qwen
+    formats: [q4_K_M]
+    requires_ram_gb: 6

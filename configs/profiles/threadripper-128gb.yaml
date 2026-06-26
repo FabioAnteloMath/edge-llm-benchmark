@@ -1,0 +1,11 @@
+# Threadripper + 128 GB RAM, no GPU.
+host_name: threadripper-128gb
+os: linux
+arch: x86_64
+cpu_cores: 32
+ram_total_gb: 128
+ram_available_gb: 110
+gpu_type: none
+vram_gb: null
+disk_free_gb: 2000
+notes: "Massive CPU-only rig. Good for 70B+ models in CPU mode."

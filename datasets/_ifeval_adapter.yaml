@@ -1,0 +1,4 @@
+task: ifeval-lite
+dataset_path: json
+dataset_kwargs:
+  data_files: C:\WorkSpace\Pessoal\edge-llm-benchmark\datasets\ifeval_subset.jsonl
