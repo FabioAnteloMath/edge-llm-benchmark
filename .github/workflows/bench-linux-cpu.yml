@@ -32,15 +32,19 @@ jobs:
 
       - name: Lint + format check
         run: |
-          set -e
-          # Use python -m ruff because the GitHub Actions runner may not put
-          # the ruff binary on PATH (it's installed via pip into user site).
-          echo "--- ruff version ---"
-          python -m ruff --version
-          echo "--- ruff check ---"
+          set +e  # don't bail on first failure — show all errors
+          echo "--- which python ---"
+          which python
+          python --version
+          echo "--- which ruff / python -m ruff ---"
+          which ruff || echo "no bare ruff"
+          python -m ruff --version 2>&1 || echo "ruff import FAILED"
+          echo "--- ruff check (exit code follows) ---"
           python -m ruff check src/ tests/
-          echo "--- ruff format --check ---"
+          echo "exit=$?"
+          echo "--- ruff format --check (exit code follows) ---"
           python -m ruff format --check src/ tests/
+          echo "exit=$?"
 
       - name: Unit tests
         run: pytest tests/ -v
