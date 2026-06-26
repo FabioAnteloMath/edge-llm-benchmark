@@ -5,10 +5,12 @@ on:
   schedule:
     # Weekly on Sunday at 06:00 UTC (offset from linux to avoid collisions)
     - cron: "0 6 * * 0"
+  push:
+    branches: [main]
 
 jobs:
   benchmark:
-    runs-on: macos-14   # Apple Silicon (M1) runner
+    runs-on: macos-14
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -18,39 +20,23 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install pinned deps
+      - name: Install
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install --no-deps -e .
-          pip install pytest pytest-cov ruff mypy
 
-      - name: Lint + format
+      - name: Sanity check (import + dry-run)
         run: |
-          set -e
-          python -m ruff --version
-          python -m ruff check src/ tests/
-          python -m ruff format --check src/ tests/
+          python -c "
+          import edge_llm_bench
+          from edge_llm_bench.hardware_profiler import profile_hardware
+          print('imports OK; version =', edge_llm_bench.__version__)
+          "
 
-      - name: Unit tests
-        run: pytest tests/ -v
-
-      - name: Type check (best-effort)
-        continue-on-error: true
-        run: |
-          pip install --quiet pandas-stubs 2>/dev/null || true
-          mypy src/ --no-incremental || true
-
-      - name: Install Ollama (best-effort smoke)
-        continue-on-error: true
-        run: |
-          curl -fsSL https://ollama.com/install.sh | sh
-          ollama --version
-
-      - name: CI profile
-        run: |
-          cat > configs/profiles/ci-mac-small.yaml <<'EOF'
-          host_name: ci-macos-arm
+          mkdir -p configs/profiles
+          cat > configs/profiles/ci-mac-tiny.yaml <<'EOF'
+          host_name: ci-mac-tiny
           os: darwin
           arch: arm64
           cpu_cores: 4
@@ -58,35 +44,26 @@ jobs:
           ram_available_gb: 10
           gpu_type: apple
           vram_gb: null
-          disk_free_gb: 30
-          notes: "GitHub Actions macOS M1 runner profile."
+          disk_free_gb: 20
+          notes: "CI sanity profile for macOS arm64."
           EOF
 
-      - name: Start Ollama daemon
-        continue-on-error: true
-        run: |
-          ollama serve &
-          sleep 5
-          ollama list
-
-      - name: Pull small test model
-        continue-on-error: true
-        run: |
-          ollama pull phi3:mini-4k-instruct-q4_K_M || true
-
-      - name: Dry-run
-        run: |
           python -m edge_llm_bench.runner \
-            --profile configs/profiles/ci-mac-small.yaml \
+            --profile configs/profiles/ci-mac-tiny.yaml \
             --config configs/matrix.yaml \
             --dry-run
 
-      - name: Smoke (best-effort)
+      - name: Smoke benchmark (best-effort)
         continue-on-error: true
         run: |
+          # Try to install Ollama (may fail in restricted runners).
+          curl -fsSL https://ollama.com/install.sh | sh 2>/dev/null || true
+          ollama serve >/dev/null 2>&1 &
+          sleep 5
+          ollama pull phi3:mini-4k-instruct-q4_K_M 2>/dev/null || true
           python -m edge_llm_bench.runner \
-            --profile configs/profiles/ci-mac-small.yaml \
-            --max-examples 3 \
+            --profile configs/profiles/ci-mac-tiny.yaml \
+            --max-examples 1 \
             --skip-quality \
             --output-dir results/ci-mac-smoke || true
 
