@@ -27,8 +27,10 @@ jobs:
 
       - name: Lint + format
         run: |
-          ruff check src/ tests/
-          ruff format --check src/ tests/
+          set -e
+          python -m ruff --version
+          python -m ruff check src/ tests/
+          python -m ruff format --check src/ tests/
 
       - name: Unit tests
         run: pytest tests/ -v

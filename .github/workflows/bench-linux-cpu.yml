@@ -33,12 +33,14 @@ jobs:
       - name: Lint + format check
         run: |
           set -e
+          # Use python -m ruff because the GitHub Actions runner may not put
+          # the ruff binary on PATH (it's installed via pip into user site).
           echo "--- ruff version ---"
-          ruff --version || which ruff || echo "ruff NOT FOUND"
+          python -m ruff --version
           echo "--- ruff check ---"
-          ruff check src/ tests/
+          python -m ruff check src/ tests/
           echo "--- ruff format --check ---"
-          ruff format --check src/ tests/
+          python -m ruff format --check src/ tests/
 
       - name: Unit tests
         run: pytest tests/ -v
